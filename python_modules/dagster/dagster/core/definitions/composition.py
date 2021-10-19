@@ -650,7 +650,7 @@ class InvokedSolidOutputHandle:
     def __iter__(self):
         raise DagsterInvariantViolationError(
             'Attempted to iterate over an {cls}. This object represents the output "{out}" '
-            'from the solid "{solid}". Consider yielding multiple Outputs if you seek to pass '
+            'from the solid "{solid}". Consider defining multiple Outs if you seek to pass '
             "different parts of this output to different solids.".format(
                 cls=self.__class__.__name__, out=self.output_name, solid=self.solid_name
             )
@@ -659,7 +659,7 @@ class InvokedSolidOutputHandle:
     def __getitem__(self, idx):
         raise DagsterInvariantViolationError(
             'Attempted to index in to an {cls}. This object represents the output "{out}" '
-            'from the solid "{solid}". Consider yielding multiple Outputs if you seek to pass '
+            'from the solid "{solid}". Consider defining multiple Outs if you seek to pass '
             "different parts of this output to different solids.".format(
                 cls=self.__class__.__name__, out=self.output_name, solid=self.solid_name
             )
