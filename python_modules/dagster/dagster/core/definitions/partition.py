@@ -308,6 +308,7 @@ class PartitionSetDefinition(Generic[T]):
         partitions_def: Optional[
             PartitionsDefinition[T]  # pylint: disable=unsubscriptable-object
         ] = None,
+        partitioned_config_name: Optional[str] = None,
     ):
         check.invariant(
             partition_fn is not None or partitions_def is not None,
@@ -368,6 +369,9 @@ class PartitionSetDefinition(Generic[T]):
             if partition_fn is None:
                 check.failed("One of `partition_fn` or `partitions_def` must be supplied.")
             self._partitions_def = DynamicPartitionsDefinition(partition_fn=_wrap_partition_fn)
+        partitioned_config_name = check.opt_str_param(
+            partitioned_config_name, "partitioned_config_name"
+        )
 
     @property
     def name(self):
@@ -629,15 +633,21 @@ class PartitionedConfig(Generic[T]):
         self,
         partitions_def: PartitionsDefinition[T],  # pylint: disable=unsubscriptable-object
         run_config_for_partition_fn: Callable[[Partition[T]], Dict[str, Any]],
+        name: str,
     ):
         self._partitions = check.inst_param(partitions_def, "partitions_def", PartitionsDefinition)
         self._run_config_for_partition_fn = check.callable_param(
             run_config_for_partition_fn, "run_config_for_partition_fn"
         )
+        self._name = check.str_param(name, "name")
 
     @property
     def partitions_def(self) -> PartitionsDefinition[T]:  # pylint: disable=unsubscriptable-object
         return self._partitions
+
+    @property
+    def name(self) -> str:
+        return self._name
 
     @property
     def run_config_for_partition_fn(self) -> Callable[[Partition[T]], Dict[str, Any]]:
@@ -692,6 +702,7 @@ def static_partitioned_config(
         return PartitionedConfig(
             partitions_def=StaticPartitionsDefinition(partitions_list),
             run_config_for_partition_fn=_run_config_wrapper,
+            name=fn.__name__,
         )
 
     return inner
@@ -727,6 +738,7 @@ def dynamic_partitioned_config(
         return PartitionedConfig(
             partitions_def=DynamicPartitionsDefinition(_partitions_wrapper),
             run_config_for_partition_fn=_run_config_wrapper,
+            name=fn.__name__,
         )
 
     return inner

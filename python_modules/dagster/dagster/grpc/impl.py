@@ -65,6 +65,14 @@ def _report_run_failed_if_not_finished(instance, pipeline_run_id):
         yield instance.report_run_failed(pipeline_run)
 
 
+def _get_target_for_error(partition_set_def) -> str:
+    return (
+        f"partition set '{partition_set_def.name}'"
+        if not partition_set_def.partitioned_config_name
+        else f"partitioned config '{partition_set_def.partitioned_config_name}'"
+    )
+
+
 def core_execute_run(recon_pipeline, pipeline_run, instance):
     check.inst_param(recon_pipeline, "recon_pipeline", ReconstructablePipeline)
     check.inst_param(pipeline_run, "pipeline_run", PipelineRun)
@@ -276,12 +284,11 @@ def get_partition_config(recon_repo, partition_set_name, partition_name):
     partition_set_def = definition.get_partition_set_def(partition_set_name)
     partition = partition_set_def.get_partition(partition_name)
     try:
+        target = _get_target_for_error(partition_set_def)
         with user_code_error_boundary(
             PartitionExecutionError,
             lambda: "Error occurred during the evaluation of the `run_config_for_partition` "
-            "function for partition set {partition_set_name}".format(
-                partition_set_name=partition_set_def.name
-            ),
+            "function for {target}".format(target=target),
         ):
             run_config = partition_set_def.run_config_for_partition(partition)
             return ExternalPartitionConfigData(name=partition.name, run_config=run_config)
@@ -298,7 +305,7 @@ def get_partition_names(recon_repo, partition_set_name):
         with user_code_error_boundary(
             PartitionExecutionError,
             lambda: "Error occurred during the execution of the partition generation function for "
-            "partition set {partition_set_name}".format(partition_set_name=partition_set_def.name),
+            "{target}".format(target=_get_target_for_error(partition_set_def)),
         ):
             return ExternalPartitionNamesData(
                 partition_names=partition_set_def.get_partition_names()
@@ -317,7 +324,7 @@ def get_partition_tags(recon_repo, partition_set_name, partition_name):
         with user_code_error_boundary(
             PartitionExecutionError,
             lambda: "Error occurred during the evaluation of the `tags_for_partition` function for "
-            "partition set {partition_set_name}".format(partition_set_name=partition_set_def.name),
+            "{target}".format(target=_get_target_for_error(partition_set_def)),
         ):
             tags = partition_set_def.tags_for_partition(partition)
             return ExternalPartitionTagsData(name=partition.name, tags=tags)
@@ -360,8 +367,9 @@ def get_partition_set_execution_param_data(recon_repo, partition_set_name, parti
     try:
         with user_code_error_boundary(
             PartitionExecutionError,
-            lambda: "Error occurred during the partition generation for partition set "
-            "{partition_set_name}".format(partition_set_name=partition_set_def.name),
+            lambda: "Error occurred during the partition generation for {target}".format(
+                target=_get_target_for_error(partition_set_def)
+            ),
         ):
             all_partitions = partition_set_def.get_partitions()
         partitions = [
@@ -371,16 +379,17 @@ def get_partition_set_execution_param_data(recon_repo, partition_set_name, parti
         partition_data = []
         for partition in partitions:
 
-            def _error_message_fn(partition_set_name, partition_name):
+            def _error_message_fn(partition_set_def, partition_name):
                 return lambda: (
                     "Error occurred during the partition config and tag generation for "
-                    "partition set {partition_set_name}::{partition_name}".format(
-                        partition_set_name=partition_set_name, partition_name=partition_name
+                    "{target}::{partition_name}".format(
+                        target=_get_target_for_error(partition_set_def),
+                        partition_name=partition_name,
                     )
                 )
 
             with user_code_error_boundary(
-                PartitionExecutionError, _error_message_fn(partition_set_def.name, partition.name)
+                PartitionExecutionError, _error_message_fn(partition_set_def, partition.name)
             ):
                 run_config = partition_set_def.run_config_for_partition(partition)
                 tags = partition_set_def.tags_for_partition(partition)

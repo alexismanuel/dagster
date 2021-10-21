@@ -215,6 +215,7 @@ class JobDefinition(PipelineDefinition):
                 partitions_def=mode.partitioned_config.partitions_def,
                 run_config_fn_for_partition=mode.partitioned_config.run_config_for_partition_fn,
                 mode=mode.name,
+                partitioned_config_name=mode.partitioned_config.name,
             )
 
         return self._cached_partition_set

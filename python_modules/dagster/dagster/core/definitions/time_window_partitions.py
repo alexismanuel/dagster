@@ -141,6 +141,7 @@ def daily_partitioned_config(
                 fmt=_fmt,
                 end_offset=end_offset,
             ),
+            name=fn.__name__,
         )
 
     return inner
@@ -193,6 +194,7 @@ def hourly_partitioned_config(
                 fmt=_fmt,
                 end_offset=end_offset,
             ),
+            name=fn.__name__,
         )
 
     return inner
@@ -249,6 +251,7 @@ def monthly_partitioned_config(
                 fmt=_fmt,
                 end_offset=end_offset,
             ),
+            name=fn.__name__,
         )
 
     return inner
@@ -305,6 +308,7 @@ def weekly_partitioned_config(
                 fmt=_fmt,
                 end_offset=end_offset,
             ),
+            name=fn.__name__,
         )
 
     return inner
