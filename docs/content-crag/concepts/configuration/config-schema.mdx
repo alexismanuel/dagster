@@ -69,7 +69,7 @@ ops:
       iterations: 1
 ```
 
-When you invoke [dagster job execute](/\_apidocs/cli#dagster-job-execute), you can point to that YAML file using the `--config` option:
+When you invoke [dagster job execute](/_apidocs/cli#dagster-job-execute), you can point to that YAML file using the `--config` option:
 
 ```bash
 dagster job execute --config my_config.yaml
@@ -77,13 +77,13 @@ dagster job execute --config my_config.yaml
 
 ### Dagit
 
-When executing a job from Dagit's [Playground](/concepts/dagit/dagit#playground), you can supply config as YAML using the config editor:
+When executing a job from Dagit's [Launchpad](/concepts/dagit/dagit#launchpad), you can supply config as YAML using the config editor:
 
 <Image
-alt="Config in Dagit"
-src="/images/concepts/config-dagit.png"
-width={3808}
-height={2414}
+  alt="Config in Dagit"
+  src="/images/concepts/config-dagit.png"
+  width={3808}
+  height={2414}
 />
 
 ## Config Schema
@@ -95,7 +95,7 @@ Configuration schema helps:
 - Catch configuration errors before job execution.
 - Make deployed jobs self documenting, so that it's easy to learn what configuration is required to launch them.
 
-The full range of config types and ways to specify config schema are [documented in the API Reference with examples](/\_apidocs/config).
+The full range of config types and ways to specify config schema are [documented in the API Reference with examples](/_apidocs/config).
 
 The most common objects to specify <PyObject module="dagster" object="ConfigSchema" /> for are <PyObject module="dagster" object="OpDefinition" /> and <PyObject module="dagster" object="ResourceDefinition" /> (see example code in [Configuring a Resource](#configuring-a-resource)).
 
