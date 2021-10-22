@@ -2,6 +2,7 @@ from typing import NamedTuple, Optional, Union
 
 from dagster import check
 from dagster.core.events import DagsterEvent
+from dagster.core.errors import DagsterInvariantViolationError
 from dagster.core.utils import coerce_valid_log_level
 from dagster.serdes import (
     deserialize_json_to_dagster_namedtuple,
@@ -32,6 +33,7 @@ class EventLogEntry(
             ("step_key", Optional[str]),
             ("pipeline_name", Optional[str]),
             ("dagster_event", Optional[DagsterEvent]),
+            ("job_name", Optional[str]),
         ],
     )
 ):
@@ -55,10 +57,12 @@ class EventLogEntry(
         timestamp (float): The Unix timestamp of this event.
         step_key (Optional[str]): The step key for the step which generated this event. Some events
             are generated outside of a step context.
-        pipeline_name (Optional[str]): The pipeline which generated this event. Some events are
-            generated outside of a pipeline context.
+        job_name (Optional[str]): The job which generated this event. Some events are
+            generated outside of a job context.
         dagster_event (Optional[DagsterEvent]): For framework and user events, the associated
             structured event.
+        pipeline_name (Optional[str]): (legacy) The pipeline which generated this event. Some events are
+            generated outside of a pipeline context.
     """
 
     def __new__(
@@ -72,7 +76,13 @@ class EventLogEntry(
         step_key=None,
         pipeline_name=None,
         dagster_event=None,
+        job_name=None,
     ):
+        if pipeline_name and job_name:
+            raise DagsterInvariantViolationError(
+                "Provided both `pipeline_name` and `job_name` arguments to ``EventLogEntry`` "
+                "initialization. Please provide one or the other."
+            )
         return super(EventLogEntry, cls).__new__(
             cls,
             check.opt_inst_param(error_info, "error_info", SerializableErrorInfo),
@@ -123,6 +133,7 @@ def construct_event_record(logger_message):
         pipeline_name=logger_message.meta.get("pipeline_name"),
         dagster_event=logger_message.meta.get("dagster_event"),
         error_info=None,
+        job_name=logger_message.meta.get("job_name"),
     )
 
 
